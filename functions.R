@@ -6,7 +6,7 @@ num2id = function(num){
 make_num_input = function(num, input){
     id = num2id(num)
     if(is.null(input[[id]])){
-        numin = numericInput(id, NULL, value = 4, min = 0, max = 10, width = "80px")
+        numin = numericInput(id, NULL, value = 8-num, min = 0, max = 10, width = "80px")
     }else{
         numin = numericInput(id, NULL, value = as.numeric(input[[id]]), min = 0, max = 10, width = "80px")
     }

@@ -69,7 +69,7 @@ ui <- fluidPage(
                         min = 1,
                         max = 10,
                         value = c(5, 8)),
-            sliderInput("selCardRange", "Card Value Range", min = 1, max = 15, value = c(2, 6)),
+            sliderInput("selCardRange", "Card Value Range", min = 1, max = 15, value = c(1, 6)),
             selectInput("numSims", "Simulations", choices = c("100", "1,000", "10,000", "100,000", "1,000,000"), selected = "100", multiple = FALSE),
             uiOutput("copiesPerCard")
         ),
@@ -93,8 +93,10 @@ server <- function(input, output) {
         req(rdeck_dt())
         req(input$selSuits)
         req(input$selCardRange)
+        poison = 0
+        if(input$numPoison > 0) poison = 1
         list(
-            tags$span(paste(length(input$selSuits) * length(range2seq(input$selCardRange)), "unique cards in deck")),
+            tags$span(paste(length(input$selSuits) * (length(range2seq(input$selCardRange)) + poison), "unique cards in deck")),
             tags$br(),
             tags$span(paste("Deck of", nrow(rdeck_dt())))
         )
@@ -103,7 +105,7 @@ server <- function(input, output) {
         numins = lapply(range2seq(input$selCardRange), make_num_input, input = input)
         id = num2id("Poison")
         if(is.null(input[[id]])){
-            numPois = numericInput(id, NULL, value = 3, min = 0, max = 10, width = "80px")
+            numPois = numericInput(id, NULL, value = 4, min = 0, max = 10, width = "80px")
         }else{
             numPois = numericInput(id, NULL, value = as.numeric(input[[id]]), min = 0, max = 10, width = "80px")
         }
@@ -161,8 +163,11 @@ server <- function(input, output) {
     output$fraction_plot = renderPlot({
         req(rfraction())
         frac_dt = rfraction()
+        frac_dt[, label := format(round(fraction_legal, digits = 3), digits = 4)]
         p = ggplot(frac_dt, aes(x = hand_size, y = fraction_legal)) + 
             geom_path() + geom_point() +
+            geom_text(data = frac_dt[hand_size < max(hand_size)], aes(label = label, x = hand_size + .1), hjust = 0) +
+            geom_text(data = frac_dt[hand_size == max(hand_size)], aes(label = label, x = hand_size - .1), hjust = 1) +
             labs(x = "Hand size", y = "Legal fraction of hands", title = "BadRito legal hands")
         ggdraw() +
         draw_image("Coop-memegenerator.net_.jpg", width = .8, x = .1, y = .1, height = .8) +
@@ -174,6 +179,7 @@ server <- function(input, output) {
         req(rsim_hands())
         req(rlegal())
         set.seed(input$numSeed)
+        # browser()
         hands_list = rsim_hands()
         legal_dt = rlegal()
         sel_legal = legal_dt[legal == TRUE][sample(.N, min(10, .N)),]
@@ -182,6 +188,7 @@ server <- function(input, output) {
         sel_hands = sel_hands[order(hand_order)]
         sel_hands = sel_hands[hand_order <= hand_size]
         sel_hands = sel_hands[order(value)][order(suit)]
+        sel_hands = unique(sel_hands)
         hand_txt =sel_hands[, paste(paste0(value, suit), collapse = ", "), .(hand_id, player, hand_size)]$V1
         c(list(tags$h2("Legal hands", style="color:green;")), lapply(hand_txt, function(x)list(tags$span(x), tags$br())))
     })
