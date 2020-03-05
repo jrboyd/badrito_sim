@@ -6,9 +6,9 @@ num2id = function(num){
 make_num_input = function(num, input){
     id = num2id(num)
     if(is.null(input[[id]])){
-        numin = numericInput(id, NULL, value = 4, min = 1, max = 10, width = "80px")
+        numin = numericInput(id, NULL, value = 4, min = 0, max = 10, width = "80px")
     }else{
-        numin = numericInput(id, NULL, value = as.numeric(input[[id]]), min = 1, max = 10, width = "80px")
+        numin = numericInput(id, NULL, value = as.numeric(input[[id]]), min = 0, max = 10, width = "80px")
     }
     fluidRow(column(width = 2, tags$h4(num)), column(width = 8, numin))
 }
@@ -21,10 +21,11 @@ range2seq = function(rng){
 get_value_weights = function(card_range, input){
     vals = range2seq(card_range)
     ids = sapply(vals, num2id)
+    ids = c("numPoison", ids)
     count = sapply(ids, function(id){
         req(input[[id]])
     })
-    dt = data.table(value = vals, count = count)
+    dt = data.table(value = sub("num", "", names(count)), count = count)
     dt
 }
 
@@ -59,6 +60,8 @@ is_legal_suit_count = function(hands_dt, hand_range, min_suits = 3){
 }
 
 is_contiguous = function(val){
+    if(any(val == "Poison")) return(FALSE)
+    val = as.numeric(as.character(val))
     setequal(val, range2seq(val))
 }
 

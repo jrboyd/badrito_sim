@@ -21,24 +21,24 @@ bfcif = ssvRecipes::bfcif
 main_suits = c("H", "D", "S", "C")
 all_suits = c(main_suits, setdiff(LETTERS, main_suits))
 
-input = list()
-input$selCardRange = c(2, 6)
-input$num1 = 4
-input$num2 = 4
-input$num3 = 4
-input$num4 = 3
-input$num5 = 2
-input$num6 = 1
-input$selSuits = main_suits
-input$numPlayerCount = 4
-input$selHandSize = c(5, 8)
-input$numSims = "1,000"
-num_sims = as.numeric(gsub(",", "", input$numSims))
-max_hand = max(input$selHandSize)
-hand_range = input$selHandSize
-num_players = input$numPlayerCount
-deck_dt = generate_deck(get_value_weights(input$selCardRange, input), input$selSuits)
-master_seed = 0
+# input = list()
+# input$selCardRange = c(2, 6)
+# input$num1 = 4
+# input$num2 = 4
+# input$num3 = 4
+# input$num4 = 3
+# input$num5 = 2
+# input$num6 = 1
+# input$selSuits = main_suits
+# input$numPlayerCount = 4
+# input$selHandSize = c(5, 8)
+# input$numSims = "1,000"
+# num_sims = as.numeric(gsub(",", "", input$numSims))
+# max_hand = max(input$selHandSize)
+# hand_range = input$selHandSize
+# num_players = input$numPlayerCount
+# deck_dt = generate_deck(get_value_weights(input$selCardRange, input), input$selSuits)
+# master_seed = 0
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -101,10 +101,18 @@ server <- function(input, output) {
     })
     output$copiesPerCard = renderUI({
         numins = lapply(range2seq(input$selCardRange), make_num_input, input = input)
+        id = num2id("Poison")
+        if(is.null(input[[id]])){
+            numPois = numericInput(id, NULL, value = 3, min = 0, max = 10, width = "80px")
+        }else{
+            numPois = numericInput(id, NULL, value = as.numeric(input[[id]]), min = 0, max = 10, width = "80px")
+        }
+        
         c(list(
             fluidRow(column(width = 2, tags$h3("Card")), column(width = 8, tags$h3("Count"))), 
             tags$hr(),
-            numins
+            c(list(fluidRow(column(width = 2, tags$h4("Poison")), column(width = 8, numPois))),
+              numins)
         ))
     })
     
